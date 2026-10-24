@@ -24,34 +24,33 @@ These are planned choices, not verified implementation details.
 
 ## 3. Current Tasks
 
-### Active milestone: Repository foundation & environment audit
+### Active milestone: Minimal Electron application scaffold
 
-- [x] Create the public GitHub repository.
-- [x] Clone the repository locally.
-- [x] Create `README.md`.
-- [x] Create `.gitignore`.
-- [x] Create and review project documentation (`project.md`, `brain.md`, `AI_WORKFLOW.md`).
-- [x] Audit development environment and tooling (Node.js, npm, Git, OS, Ollama).
-- [ ] Stage verified foundational files (`.gitignore`, `AI_WORKFLOW.md`, `README.md`, `brain.md`, `project.md`).
-- [ ] Create the initial commit.
-- [ ] Push the initial commit and verify GitHub.
+- [x] Query and verify latest stable Electron version compatible with Node.js 22 (`electron@^45.0.0`).
+- [x] Create root `package.json` (`name`: "aether", `version`: "0.1.0", `private`: true, `scripts.start`: "electron .", `devDependencies.electron`: "^45.0.0").
+- [ ] Install dependencies (`npm install`).
+- [ ] Implement initial main process (`main.js`) with secure window settings.
+- [ ] Implement initial preload script (`preload.js`) with context isolation.
+- [ ] Implement initial browser shell UI (`index.html`, `style.css`, `renderer.js`).
+- [ ] Verify local launch (`npm start`).
 
 ### Next milestone
 
-Task 02: Minimal Electron application scaffold and secure window initialization.
+Basic navigation and address bar implementation.
 
 ## 4. Completed Milestones
 
 ### M0 — Repository creation and initial files
 
-Status: IN PROGRESS (Files established and audited; initial commit pending review).
+Status: COMPLETE.
 
-Verified from environment audit (2026-10-24):
+Verified from environment audit and Git execution (2026-10-24):
 - Local working directory: `C:\Projects\aether`.
-- Current branch: `main` (no commits yet).
-- Remote: `origin` points to `https://github.com/manishreddy1767/aether` (fetch & push).
-- Untracked files present: `.gitignore`, `AI_WORKFLOW.md`, `README.md`, `brain.md`, `project.md`.
-- No sensitive files, credentials, logs, build artifacts, or model weights detected in working tree.
+- Current branch: `main`.
+- Remote: `origin` points to `https://github.com/manishreddy1767/aether`.
+- Initial commit created: `1d52776739c05678633ab131e3ff3b5e6fe02669` (`chore: initialize repository foundation and project documentation`).
+- Pushed to remote: `origin main` tracking verified.
+- No sensitive files, credentials, logs, build artifacts, or model weights in repository.
 - Installed tools verified:
   - Node.js: `v22.23.2`
   - npm: `10.9.8`
@@ -59,8 +58,6 @@ Verified from environment audit (2026-10-24):
   - OS: Windows 11 (`Microsoft Windows NT 10.0.26300.0`)
   - Shell: Windows PowerShell `5.1.26100.9711`
   - Ollama: installed (`0.40.8` CLI at `C:\Users\manis\AppData\Local\Programs\Ollama\ollama.exe`), daemon currently stopped.
-
-The initial commit and push have not yet been performed.
 
 ## 5. Decisions
 
@@ -84,24 +81,32 @@ The initial commit and push have not yet been performed.
 
 ## 7. Latest Verification
 
-- Verified branch: `main` (unborn branch / no commits yet).
-- Verified remote: `origin` points to `https://github.com/manishreddy1767/aether`.
-- Verified working tree: 5 untracked documentation/configuration files, clean of secrets.
+- Verified commit: `1d52776739c05678633ab131e3ff3b5e6fe02669` (`chore: initialize repository foundation and project documentation`).
+- Verified push: `main -> origin/main` at `https://github.com/manishreddy1767/aether`.
+- Verified working tree: clean of secrets, 5 initial tracked files.
 - Verified tools: Node v22.23.2, npm 10.9.8, Git 2.54.0.windows.1, Ollama 0.40.8 CLI.
 
 ## 8. Next Actions
 
-1. User review of audit report and initial files.
-2. Stage foundational files (`.gitignore`, `AI_WORKFLOW.md`, `README.md`, `brain.md`, `project.md`).
-3. Create the initial commit and push to `origin main`.
-4. Proceed to Task 02 (Minimal Electron Application).
+1. Review root `package.json` and `brain.md` changes.
+2. Install dependencies (`npm install` / development dependencies).
+3. Create minimal secure main process (`main.js`) and preload script (`preload.js`).
 
 ## 9. Milestone Update Log
 
-### 2026-10-24 — Task 01: Repository and Environment Audit
-- Inspected repository state: branch `main`, no existing commits, remote `https://github.com/manishreddy1767/aether`.
-- Verified existing files: `.gitignore`, `AI_WORKFLOW.md`, `README.md`, `brain.md`, `project.md`.
+### 2026-10-24 — Task 01: Repository Foundation, Audit, and Initial Commit
+- Inspected repository state: branch `main`, remote `https://github.com/manishreddy1767/aether`.
+- Verified existing files: `.gitignore`, `AI_WORKFLOW.md`, `README.md`, `brain.md`, `project.md`. Checked all files for secrets (none found).
 - Inspected environment tools: Node.js `v22.23.2`, npm `10.9.8`, Git `2.54.0.windows.1`, Ollama CLI `0.40.8`.
 - Inspected `.gitignore` and working tree for security risks: no secrets, databases, or untracked build artifacts found.
+- Staged all 5 foundational files: `git add README.md .gitignore project.md brain.md AI_WORKFLOW.md`.
+- Verified staged diff: 5 files, +359 lines.
+- Created root commit: `1d52776` (`chore: initialize repository foundation and project documentation`).
+- Pushed to GitHub: `git push -u origin main` (`main -> main`).
 - Verified that no blockers exist for minimal Electron app initialization.
-- Next concrete action: User review, stage and commit initial repository foundation.
+
+### 2026-10-24 — Task 02 Step 1: Root package.json Creation
+- Queried npm registry dist-tags for Electron (`npm view electron dist-tags`); verified current stable release is `45.0.0` (`latest: '45.0.0'`).
+- Created root `package.json` with `name`: "aether", `version`: "0.1.0", `private`: true, `scripts.start`: "electron .", and `devDependencies.electron`: "^45.0.0".
+- Verified no other application files or dependencies were installed yet.
+- Next concrete action: User review of `package.json` before installing dependencies or creating app code.
