@@ -24,19 +24,17 @@ These are planned choices, not verified implementation details.
 
 ## 3. Current Tasks
 
-### Active milestone: Minimal Electron application scaffold
+### Active milestone: Basic navigation bar UI & address input
 
-- [x] Query and verify latest stable Electron version compatible with Node.js 22 (`electron@^45.0.0`).
-- [x] Create root `package.json` (`name`: "aether", `version`: "0.1.0", `private`: true, `scripts.start`: "electron .", `devDependencies.electron`: "^45.0.0").
-- [x] Install dependencies (`npm install` succeeded, `package-lock.json` tracked in `063c74e`).
-- [x] Implement initial main process (`main.js`) with secure window settings (`contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`) and standard window lifecycle.
-- [x] Implement minimal local shell (`index.html`) with strict Content-Security-Policy.
-- [x] Verify local launch (`npm start` verified: successfully opened the AETHER window).
-- [ ] Implement initial preload script (`preload.js`) when narrow IPC APIs are needed.
+- [x] Implement dark navigation toolbar in `index.html` with Back, Forward, Reload buttons and address input.
+- [x] Implement input parsing in `index.html` to convert URL inputs to full URLs and plain text to Google search URLs.
+- [x] Preserve strict CSP (`default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';`) with zero external assets/dependencies.
+- [ ] Implement preload script (`preload.js`) and IPC bridge for navigation.
+- [ ] Connect web content container / WebContentsView for rendering external pages.
 
 ### Next milestone
 
-Basic navigation and address bar implementation.
+Tab management and web content navigation architecture.
 
 ## 4. Completed Milestones
 
@@ -67,6 +65,17 @@ Verified from user execution and Git history (2026-10-24):
 - Dependencies installed: `npm install` succeeded (`package-lock.json` committed in `063c74e`).
 - Window implementation: `main.js` and `index.html` created with `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`, and strict CSP (`default-src 'none'; style-src 'unsafe-inline';`).
 - Runtime verification: `npm start` successfully launched the application and opened the AETHER window.
+- Committed in `43024cb` (`feat: add secure Electron app window`) and pushed to `origin main`.
+
+### M2 — Navigation bar UI and address parser
+
+Status: COMPLETE (UI verified locally in `index.html`).
+
+Verified from implementation and JavaScript execution checks (2026-10-24):
+- Navigation bar UI: Polished dark toolbar with Back, Forward, Reload buttons (inline SVG icons) and address bar wrapper.
+- URL / Search parser: Evaluated and verified `formatInputToUrl` handles absolute URLs, domains with TLDs, localhost/IPs, and falls back to Google search URLs.
+- Security: Zero external assets or network dependencies; strict CSP enforced (`default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';`).
+- Clean separation: No page navigation or IPC APIs introduced ahead of architecture design.
 
 ## 5. Decisions
 
@@ -96,17 +105,19 @@ Verified from user execution and Git history (2026-10-24):
   - `b15e023fb060d45e17cde632d3ec2a5da9efe28f` (`build: add Electron package configuration`)
   - `aa41baf45a3089408e01bb227dc662136e053a48` (`docs: record package configuration checkpoint in brain.md`)
   - `063c74e89e47eb59c720516ba7833a1e2f4ea6c8` (`build: lock Electron dependencies`)
-- Verified push: `main -> origin/main` at `https://github.com/manishreddy1767/aether`.
+  - `43024cb562479e00ec6a0ba921e25e83ea57d9fb` (`feat: add secure Electron app window`)
+- Verified push: `main -> origin/main` (`43024cb`) at `https://github.com/manishreddy1767/aether`.
 - Verified execution:
   - `npm install` succeeded (`package-lock.json` tracked).
   - `main.js`: Syntax check `node --check main.js` passed (exit code 0).
   - `npm start` successfully opened the AETHER desktop application window.
+  - `index.html` navigation bar UI and URL/search parser verified: embedded script passes syntax and unit checks for absolute URLs, domains with TLDs, IPs, and search queries.
 - Verified tools: Node v22.23.2, npm 10.9.8, Git 2.54.0.windows.1, Ollama 0.40.8 CLI.
 
 ## 8. Next Actions
 
-1. Plan and implement basic browser navigation and address bar.
-2. Evaluate and establish preload script bridge for trusted UI to main process IPC.
+1. Design preload IPC bridge and WebContentsView container for remote webpage browsing.
+2. Implement tab management and multi-tab session architecture.
 
 ## 9. Milestone Update Log
 
@@ -134,5 +145,15 @@ Verified from user execution and Git history (2026-10-24):
 - Verified JavaScript syntax: `node --check main.js` (exit 0).
 - Installed dependencies: `npm install` succeeded (`package-lock.json` committed in `063c74e`).
 - Verified runtime execution: `npm start` successfully opened the AETHER desktop window.
-- Staged and committed `main.js`, `index.html`, and `brain.md` as `feat: add secure Electron app window`.
+- Staged and committed `main.js`, `index.html`, and `brain.md` as `feat: add secure Electron app window` (`43024cb`).
+- Pushed commit to `origin main`.
+
+### 2026-10-24 — Task 03 Step 1: Navigation Bar UI, Address Parser & Checkpoint
+- Implemented dark navigation toolbar in `index.html` with Back, Forward, Reload buttons and address/search omnibox.
+- Implemented `formatInputToUrl` parser to normalize valid URLs/domains and convert plain text to Google search URLs.
+- Preserved strict CSP (`default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';`) with zero external assets, fonts, or network dependencies.
+- Verified parser logic across standard URLs, localhost/IPs, domain formats, and search queries using 14 unit test harness cases.
+- Validated clean whitespace and diff: `git diff --check` passed with 0 errors.
+- Verified application launch: `npm start` successfully launched the desktop application window with the navigation bar UI.
+- Staged and committed `index.html` and `brain.md` as `feat: add browser navigation toolbar`.
 - Pushed commit to `origin main`.

@@ -2,38 +2,371 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AETHER</title>
   <style>
-    body {
+    * {
+      box-sizing: border-box;
       margin: 0;
-      padding: 2rem;
+      padding: 0;
+    }
+
+    :root {
+      --bg-base: #0f1015;
+      --bg-surface: #181920;
+      --bg-input: #101117;
+      --bg-hover: rgba(255, 255, 255, 0.08);
+      --bg-active: rgba(255, 255, 255, 0.14);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-input: rgba(255, 255, 255, 0.14);
+      --border-focus: #3b82f6;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --accent: #38bdf8;
+    }
+
+    body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #0f1117;
-      color: #e2e8f0;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Navigation toolbar */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background-color: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .nav-group {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .tool-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    .tool-btn:hover {
+      background-color: var(--bg-hover);
+      color: var(--text-main);
+    }
+
+    .tool-btn:active {
+      background-color: var(--bg-active);
+    }
+
+    .tool-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* Omnibox / address bar */
+    .address-bar-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-input);
+      border-radius: 8px;
+      padding: 0.35rem 0.75rem;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .address-bar-wrapper:focus-within {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+    }
+
+    .search-icon {
+      width: 15px;
+      height: 15px;
+      color: var(--text-dim);
+      flex-shrink: 0;
+    }
+
+    .address-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text-main);
+      font-size: 0.875rem;
+      letter-spacing: 0.01em;
+      font-family: inherit;
+    }
+
+    .address-input::placeholder {
+      color: var(--text-dim);
+    }
+
+    /* Privacy indicator badge */
+    .privacy-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #34d399;
+      background: rgba(52, 211, 153, 0.1);
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      letter-spacing: 0.02em;
+    }
+
+    .privacy-badge svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    /* Viewport / Workspace Area */
+    .workspace {
+      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 80vh;
+      padding: 2rem;
       text-align: center;
+      overflow-y: auto;
     }
+
+    .brand-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 1.25rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .brand-mark svg {
+      width: 28px;
+      height: 28px;
+      stroke: var(--accent);
+    }
+
     h1 {
       font-size: 2.25rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
       margin-bottom: 0.5rem;
-      letter-spacing: 0.05em;
     }
-    p {
-      color: #94a3b8;
-      max-width: 480px;
+
+    .subtitle {
+      color: var(--text-muted);
+      max-width: 500px;
+      font-size: 0.95rem;
       line-height: 1.5;
+      margin-bottom: 2rem;
+    }
+
+    /* Status card for UI interaction feedback */
+    .status-card {
+      width: 100%;
+      max-width: 560px;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: left;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .status-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .status-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+      color: var(--text-dim);
+    }
+
+    .status-chip {
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      background-color: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .status-target {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.875rem;
+      color: var(--accent);
+      word-break: break-all;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      padding: 0.6rem 0.75rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+    }
+
+    .status-description {
+      font-size: 0.825rem;
+      color: var(--text-muted);
+      line-height: 1.4;
     }
   </style>
 </head>
 <body>
-  <h1>AETHER</h1>
-  <p>Privacy-focused Windows desktop browser with local AI-powered research tools.</p>
+  <!-- Navigation Toolbar -->
+  <header class="toolbar">
+    <div class="nav-group">
+      <button class="tool-btn" id="btn-back" title="Back" aria-label="Back">
+        <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <button class="tool-btn" id="btn-forward" title="Forward" aria-label="Forward">
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <button class="tool-btn" id="btn-reload" title="Reload" aria-label="Reload">
+        <svg viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
+    </div>
+
+    <div class="address-bar-wrapper">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input
+        type="text"
+        id="address-input"
+        class="address-input"
+        placeholder="Search Google or enter a web address"
+        autocomplete="off"
+        spellcheck="false"
+      />
+    </div>
+
+    <div class="privacy-badge" title="Local sandbox & context isolation enabled">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+      </svg>
+      <span>Protected</span>
+    </div>
+  </header>
+
+  <!-- Workspace View -->
+  <main class="workspace">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+      </svg>
+    </div>
+    <h1>AETHER</h1>
+    <p class="subtitle">Privacy-focused Windows desktop browser with local AI-powered research tools.</p>
+
+    <div class="status-card">
+      <div class="status-header">
+        <span class="status-title">Navigation Status</span>
+        <span class="status-chip" id="action-indicator">UI Initialized</span>
+      </div>
+      <div class="status-target" id="resolved-target">Ready: Type a query or URL and press Enter</div>
+      <p class="status-description" id="status-note">
+        The navigation bar parses input into verified URLs or Google search URLs. Webpage rendering and navigation IPC will be connected in the next milestone.
+      </p>
+    </div>
+  </main>
+
+  <script>
+    function formatInputToUrl(input) {
+      const query = input.trim();
+      if (!query) return '';
+
+      // Preserve existing protocol
+      if (/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(query)) {
+        return query;
+      }
+
+      // Check localhost or IP
+      if (/^localhost(:\d+)?(\/.*)?$/i.test(query) || /^(\d{1,3}\.){3}\d{1,3}(:\d+)?(\/.*)?$/.test(query)) {
+        return 'http://' + query;
+      }
+
+      // Check domain name pattern (must have dot, valid TLD, no whitespace)
+      if (/^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/.*)?$/.test(query)) {
+        return 'https://' + query;
+      }
+
+      // Default: Google search URL
+      return 'https://www.google.com/search?q=' + encodeURIComponent(query);
+    }
+
+    const addressInput = document.getElementById('address-input');
+    const resolvedTarget = document.getElementById('resolved-target');
+    const actionIndicator = document.getElementById('action-indicator');
+    const statusNote = document.getElementById('status-note');
+
+    addressInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        const raw = addressInput.value;
+        const target = formatInputToUrl(raw);
+
+        if (target) {
+          addressInput.value = target;
+          resolvedTarget.textContent = target;
+          actionIndicator.textContent = target.startsWith('https://www.google.com/search') ? 'Search Query' : 'Target URL';
+          statusNote.textContent = 'Input resolved. Navigation IPC is not yet connected.';
+        }
+      }
+    });
+
+    document.getElementById('btn-back').addEventListener('click', () => {
+      actionIndicator.textContent = 'Back';
+      statusNote.textContent = 'Back navigation button clicked. Navigation history is not yet connected.';
+    });
+
+    document.getElementById('btn-forward').addEventListener('click', () => {
+      actionIndicator.textContent = 'Forward';
+      statusNote.textContent = 'Forward navigation button clicked. Navigation history is not yet connected.';
+    });
+
+    document.getElementById('btn-reload').addEventListener('click', () => {
+      actionIndicator.textContent = 'Reload';
+      statusNote.textContent = 'Reload button clicked. Active tab reload is not yet connected.';
+    });
+  </script>
 </body>
 </html>
-
