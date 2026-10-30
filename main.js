@@ -1,8 +1,11 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, WebContentsView, ipcMain } = require('electron');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
 let mainWindow = null;
+
+/** Height of the HTML toolbar in pixels. Must match the rendered toolbar height in index.html. */
+const TOOLBAR_HEIGHT = 48;
 
 const EXPECTED_INDEX_URL = pathToFileURL(path.join(__dirname, 'index.html')).href;
 
@@ -111,6 +114,21 @@ function registerIpcHandlers() {
   });
 }
 
+/**
+ * Computes and applies the correct bounds for the WebContentsView so it fills
+ * the entire content area below the toolbar.
+ * Called on creation and on every window resize.
+ */
+function updateWebViewBounds(webView) {
+  const [contentWidth, contentHeight] = mainWindow.getContentSize();
+  webView.setBounds({
+    x: 0,
+    y: TOOLBAR_HEIGHT,
+    width: contentWidth,
+    height: Math.max(0, contentHeight - TOOLBAR_HEIGHT)
+  });
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -120,6 +138,30 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true
+    }
+  });
+
+  // --- WebContentsView: sandboxed external webpage area ---
+  // No preload is attached; the view is fully isolated from main-window privileges.
+  const webView = new WebContentsView({
+    webPreferences: {
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: false
+    }
+  });
+
+  // Deny all popup/window-open requests from web content.
+  webView.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+
+  // Attach to the window's root content view and position below the toolbar.
+  mainWindow.contentView.addChildView(webView);
+  updateWebViewBounds(webView);
+
+  // Keep bounds correct whenever the window is resized.
+  mainWindow.on('resize', () => {
+    if (!mainWindow.isDestroyed()) {
+      updateWebViewBounds(webView);
     }
   });
 
