@@ -3,6 +3,8 @@ const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
 let mainWindow = null;
+/** Reference to the sandboxed WebContentsView that renders external web pages. */
+let webView = null;
 
 /** Height of the HTML toolbar in pixels. Must match the rendered toolbar height in index.html. */
 const TOOLBAR_HEIGHT = 48;
@@ -82,8 +84,15 @@ function registerIpcHandlers() {
       return;
     }
 
-    console.log('[IPC:browser:navigate] Accepted validated navigation request');
-    // WebContentsView navigation handling will connect here in Step 3
+    if (!webView || webView.webContents.isDestroyed()) {
+      console.warn('[IPC:browser:navigate] WebContentsView not available');
+      return;
+    }
+
+    console.log('[IPC:browser:navigate] Loading validated URL in WebContentsView');
+    webView.webContents.loadURL(validatedUrl).catch(() => {
+      console.warn('[IPC:browser:navigate] Navigation failed');
+    });
   });
 
   ipcMain.on(IPC_CHANNELS.GO_BACK, (event) => {
@@ -92,7 +101,14 @@ function registerIpcHandlers() {
       return;
     }
 
-    console.log('[IPC:browser:go-back] Accepted navigation request');
+    if (!webView || webView.webContents.isDestroyed()) {
+      return;
+    }
+
+    if (webView.webContents.canGoBack()) {
+      webView.webContents.goBack();
+      console.log('[IPC:browser:go-back] Navigating back');
+    }
   });
 
   ipcMain.on(IPC_CHANNELS.GO_FORWARD, (event) => {
@@ -101,7 +117,14 @@ function registerIpcHandlers() {
       return;
     }
 
-    console.log('[IPC:browser:go-forward] Accepted navigation request');
+    if (!webView || webView.webContents.isDestroyed()) {
+      return;
+    }
+
+    if (webView.webContents.canGoForward()) {
+      webView.webContents.goForward();
+      console.log('[IPC:browser:go-forward] Navigating forward');
+    }
   });
 
   ipcMain.on(IPC_CHANNELS.RELOAD, (event) => {
@@ -110,7 +133,12 @@ function registerIpcHandlers() {
       return;
     }
 
-    console.log('[IPC:browser:reload] Accepted reload request');
+    if (!webView || webView.webContents.isDestroyed()) {
+      return;
+    }
+
+    webView.webContents.reload();
+    console.log('[IPC:browser:reload] Reloading WebContentsView');
   });
 }
 
@@ -143,7 +171,7 @@ function createWindow() {
 
   // --- WebContentsView: sandboxed external webpage area ---
   // No preload is attached; the view is fully isolated from main-window privileges.
-  const webView = new WebContentsView({
+  webView = new WebContentsView({
     webPreferences: {
       sandbox: true,
       contextIsolation: true,
@@ -154,13 +182,36 @@ function createWindow() {
   // Deny all popup/window-open requests from web content.
   webView.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 
+  // Enforce HTTP/HTTPS-only for all top-level navigations within the view.
+  // Blocks file:, blob:, data:, and other schemes initiated by page-level navigation.
+  webView.webContents.on('will-navigate', (event, url) => {
+    if (!validateNavigationUrl(url)) {
+      event.preventDefault();
+      console.warn('[WebView] Blocked will-navigate to non-http/https URL');
+    }
+  });
+
+  // Enforce HTTP/HTTPS-only for server-side redirects.
+  webView.webContents.on('will-redirect', (event, url) => {
+    if (!validateNavigationUrl(url)) {
+      event.preventDefault();
+      console.warn('[WebView] Blocked will-redirect to non-http/https URL');
+    }
+  });
+
+  // Clear the module-level reference when the view's webContents is destroyed.
+  webView.webContents.on('destroyed', () => {
+    webView = null;
+  });
+
   // Attach to the window's root content view and position below the toolbar.
   mainWindow.contentView.addChildView(webView);
   updateWebViewBounds(webView);
 
   // Keep bounds correct whenever the window is resized.
+  // Guard against webView being null (destroyed before resize fires).
   mainWindow.on('resize', () => {
-    if (!mainWindow.isDestroyed()) {
+    if (!mainWindow.isDestroyed() && webView && !webView.webContents.isDestroyed()) {
       updateWebViewBounds(webView);
     }
   });
@@ -168,6 +219,7 @@ function createWindow() {
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
   mainWindow.on('closed', () => {
+    webView = null;
     mainWindow = null;
   });
 }
